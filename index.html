@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <link rel="manifest" href="./manifest.json">
+        <meta charset="UTF-8">
+        <title>IndexedDB: Local Database with HTML5</title>
+        <script type="text/javascript">
+            var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+            
+            var dataBase = null;
+            
+            function startDB() {
+                
+                dataBase = indexedDB.open('object', 1);
+                
+                dataBase.onupgradeneeded = function (e) {
+                    var active = dataBase.result;
+                    
+                    var object = active.createObjectStore("people", { keyPath : 'id', autoIncrement : true });
+                    object.createIndex('by_name', 'nombre', { unique : false });
+                    object.createIndex('by_cui', 'cui', { unique : true });
+                };
+                
+                dataBase.onsuccess = function (e) {
+                    alert('Database loaded');
+                };
+
+                dataBase.onerror = function (e) {
+                    alert('Error loading database');
+                };
+            }
+            
+            function add() {
+                
+                var active = dataBase.result;
+                var data = active.transaction(["people"], "readwrite");
+                var object = data.objectStore("people");
+                
+                var request = object.put({
+                    cui : document.querySelector("#cui").value,
+                    nombre : document.querySelector("#nombre").value,
+                    sucursal : document.querySelector("#sucursal").value,
+                    habitacion : document.querySelector("#habitacion").value,
+                    medico : document.querySelector("#medico").value,
+                    fechaEn : document.querySelector("#fechaEn").value,
+                    fechaSa : document.querySelector("#fechaSa").value
+                });
+                
+                request.onerror = function (e) {
+                    alert(request.error.name + '\n\n' + request.error.message);
+                };
+                
+                data.oncomplete = function (e) {
+                    document.querySelector('#cui').value = '';
+                    document.querySelector('#nombre').value = '';
+                    document.querySelector('#sucursal').value = '';
+                    document.querySelector('#habitacion').value = '';
+                    document.querySelector('#medico').value = '';
+                    document.querySelector('#fechaEn').value = '';
+                    document.querySelector('#fechaSa').value = '';
+                    alert('Los datos de agregaron correctamente');
+                };
+            }
+        </script>
+    </head>
+    <body onload="startDB();">
+        <input type="text" id="cui" placeholder="Ingrese Cui" />
+        <input type="text" id="nombre" placeholder="Ingrese Nombre" />
+        <input type="text" id="sucursal" placeholder="Ingrese Sucursla" />
+        <input type="text" id="habitacion" placeholder="Ingrese Habitacion" />
+        <input type="text" id="medico" placeholder="Ingrese Medico" />
+        <input type="date" id="fechaEn" placeholder="Fecha de Entrada" />
+        <input type="date" id="fechaSa" placeholder="Fecha de Salida" />
+        <button type="button" onclick="add();">Agregar</button>
+    </body>
+</html>
